@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo4j Spatial API Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+        <h1 class="text-2xl font-bold mb-4 text-center">Neo4j Spatial API Tester</h1>
+
+        <!-- Get All Locations -->
+        <div class="mb-6">
+            <button id="getAllBtn" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Get All Locations</button>
+        </div>
+
+        <!-- Add Location -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Add New Location</h2>
+            <div class="mb-2">
+                <label class="block text-sm font-medium">Name</label>
+                <input id="nameInput" type="text" placeholder="e.g., Empire State" class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium">Longitude</label>
+                <input id="lonAddInput" type="number" step="any" placeholder="-73.985130" class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium">Latitude</label>
+                <input id="latAddInput" type="number" step="any" placeholder="40.758896" class="w-full p-2 border rounded">
+            </div>
+            <button id="addLocationBtn" class="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600">Add Location</button>
+        </div>
+
+        <!-- Find Nearby Locations -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Find Nearby Locations</h2>
+            <div class="mb-2">
+                <label class="block text-sm font-medium">Longitude</label>
+                <input id="lonInput" type="number" step="any" placeholder="-73.965355" class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium">Latitude</label>
+                <input id="latInput" type="number" step="any" placeholder="40.782865" class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-2">
+                <label class="block text-sm font-medium">Max Distance (meters)</label>
+                <input id="distanceInput" type="number" placeholder="1000" class="w-full p-2 border rounded">
+            </div>
+            <button id="getNearbyBtn" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">Get Nearby Locations</button>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="mt-4 p-4 bg-gray-50 rounded border">
+            <h3 class="font-semibold">Results:</h3>
+            <pre id="output" class="text-sm"></pre>
+        </div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+
+        // Get All Locations
+        document.getElementById('getAllBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/locations');
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Add Location
+        document.getElementById('addLocationBtn').addEventListener('click', async () => {
+            const name = document.getElementById('nameInput').value;
+            const lon = document.getElementById('lonAddInput').value;
+            const lat = document.getElementById('latAddInput').value;
+
+            if (!name || !lon || !lat) {
+                output.textContent = 'Please enter name, longitude, and latitude';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/locations/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, longitude: lon, latitude: lat })
+                });
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Get Nearby Locations
+        document.getElementById('getNearbyBtn').addEventListener('click', async () => {
+            const lon = document.getElementById('lonInput').value;
+            const lat = document.getElementById('latInput').value;
+            const distance = document.getElementById('distanceInput').value;
+
+            if (!lon || !lat) {
+                output.textContent = 'Please enter longitude and latitude';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/locations/near?lon=${lon}&lat=${lat}&distance=${distance || 1000}`);
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
